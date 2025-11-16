@@ -1,0 +1,7 @@
+PySide6
+qrcode
+python-barcode
+pyzbar
+Pillow
+MyQR
+pyinstaller
