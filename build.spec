@@ -1,11 +1,20 @@
 # -*- mode: python ; coding: utf-8 -*-
+import os
+import sys
 
 block_cipher = None
+
+# 获取 pyzbar 的 DLL 文件路径
+pyzbar_path = os.path.join(sys.prefix, 'Lib', 'site-packages', 'pyzbar')
+pyzbar_dlls = [
+    (os.path.join(pyzbar_path, 'libiconv.dll'), 'pyzbar'),
+    (os.path.join(pyzbar_path, 'libzbar-64.dll'), 'pyzbar'),
+]
 
 a = Analysis(
     ['main.py'],
     pathex=[],
-    binaries=[],
+    binaries=pyzbar_dlls,
     datas=[],
     hiddenimports=[
         # PySide6 相关
