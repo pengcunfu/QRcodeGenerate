@@ -31,7 +31,10 @@ class QrCodeGUI(QMainWindow):
         super().__init__()
         self.setMinimumSize(900, 650)
         self.setWindowTitle('二维码/条形码生成工具')
-        
+
+        # 设置应用程序图标
+        self.set_app_icon()
+
         # 初始化变量
         self.picture_path = ""
 
@@ -204,6 +207,23 @@ class QrCodeGUI(QMainWindow):
         # 初始化界面状态
         self.toggle_qr_type()
         self.gen_qrcode()
+
+    def set_app_icon(self):
+        """设置应用程序图标"""
+        # 尝试使用PNG格式的图标（运行时）
+        icon_formats = ["resources/icon.png", "resources/icon.ico"]
+
+        for icon_path in icon_formats:
+            try:
+                app_icon = QtGui.QIcon(icon_path)
+                self.setWindowIcon(app_icon)
+
+                # 同时设置应用程序图标，这样对话框等也会使用相同图标
+                QApplication.instance().setWindowIcon(app_icon)
+                break  # 成功设置后退出循环
+            except Exception as e:
+                print(f"设置图标失败 ({icon_path}): {e}")
+                # 如果图标设置失败，程序继续运行，只是没有图标
 
     def create_menu_bar(self):
         """创建菜单栏"""
@@ -579,6 +599,16 @@ if __name__ == '__main__':
 
     # 使用Windows原生样式
     app.setStyle('WindowsVista')  # 在Windows上使用原生样式
+
+    # 设置应用程序图标（全局设置）
+    icon_formats = ["resources/icon.png", "resources/icon.ico"]
+    for icon_path in icon_formats:
+        try:
+            app_icon = QtGui.QIcon(icon_path)
+            app.setWindowIcon(app_icon)
+            break  # 成功设置后退出循环
+        except Exception as e:
+            print(f"设置应用程序图标失败 ({icon_path}): {e}")
 
     gui = QrCodeGUI()
     gui.show()
