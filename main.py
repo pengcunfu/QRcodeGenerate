@@ -12,12 +12,12 @@ import io
 import sys
 import qrcode
 from PySide6 import QtWidgets, QtGui
-from PySide6 import QtCore
-from PySide6.QtWidgets import (QApplication, QGridLayout, QLabel, QLineEdit, QPushButton, 
-                                QComboBox, QSpinBox, QFileDialog, QDialog, QMessageBox, 
-                                QRadioButton, QButtonGroup, QCheckBox, QVBoxLayout, 
-                                QHBoxLayout, QFormLayout, QGroupBox, QStatusBar, QFrame)
-from PySide6.QtGui import QPixmap, QIcon, QFont, QImage
+from PySide6.QtWidgets import (QApplication, QLabel, QLineEdit, QPushButton,
+                                QComboBox, QSpinBox, QFileDialog, QDialog, QMessageBox,
+                                QRadioButton, QButtonGroup, QCheckBox, QVBoxLayout,
+                                QHBoxLayout, QFormLayout, QGroupBox, QStatusBar,
+                                QMainWindow, QTextEdit, QProgressDialog)
+from PySide6.QtGui import QPixmap, QFont, QImage
 from PySide6.QtCore import Qt
 import barcode
 from barcode.writer import ImageWriter
@@ -26,7 +26,7 @@ from PIL import Image
 from MyQR import myqr
 
 
-class QrCodeGUI(QtWidgets.QWidget):
+class QrCodeGUI(QMainWindow):
     def __init__(self, parent=None):
         super().__init__()
         self.setMinimumSize(900, 650)
@@ -34,17 +34,16 @@ class QrCodeGUI(QtWidgets.QWidget):
         
         # 初始化变量
         self.picture_path = ""
-        
-        # 应用样式表
-        self.apply_stylesheet()
-        
-        # 主布局 - 垂直布局包含内容和状态栏
-        main_container = QVBoxLayout(self)
-        main_container.setSpacing(0)
-        main_container.setContentsMargins(0, 0, 0, 0)
-        
+
+        # 创建菜单栏
+        self.create_menu_bar()
+
+        # 创建中心部件
+        central_widget = QtWidgets.QWidget()
+        self.setCentralWidget(central_widget)
+
         # 主内容布局 - 水平布局
-        main_layout = QHBoxLayout()
+        main_layout = QHBoxLayout(central_widget)
         main_layout.setSpacing(15)
         main_layout.setContentsMargins(15, 15, 15, 15)
         
@@ -55,8 +54,7 @@ class QrCodeGUI(QtWidgets.QWidget):
         left_layout.setSpacing(12)
         
         # 二维码类型选择组
-        type_group = QGroupBox('🔧 二维码类型')
-        type_group.setObjectName('typeGroup')
+        type_group = QGroupBox('二维码类型')
         type_layout = QHBoxLayout()
         
         self.radio_simple = QRadioButton('普通二维码')
@@ -72,8 +70,7 @@ class QrCodeGUI(QtWidgets.QWidget):
         type_group.setLayout(type_layout)
         
         # 内容输入组
-        content_group = QGroupBox('📝 内容设置')
-        content_group.setObjectName('contentGroup')
+        content_group = QGroupBox('内容设置')
         content_layout = QFormLayout()
         
         self.content_edit = QLineEdit()
@@ -82,8 +79,7 @@ class QrCodeGUI(QtWidgets.QWidget):
         content_group.setLayout(content_layout)
         
         # 普通二维码参数设置组
-        params_group = QGroupBox('⚙️ 参数设置')
-        params_group.setObjectName('paramsGroup')
+        params_group = QGroupBox('参数设置')
         params_layout = QFormLayout()
         
         self.version_combobox = QComboBox()
@@ -104,8 +100,7 @@ class QrCodeGUI(QtWidgets.QWidget):
         params_group.setLayout(params_layout)
         
         # 个性化选项组
-        personal_group = QGroupBox('🎨 个性化选项')
-        personal_group.setObjectName('personalGroup')
+        personal_group = QGroupBox('个性化选项')
         personal_layout = QVBoxLayout()
         
         # 背景图片选择
@@ -129,28 +124,23 @@ class QrCodeGUI(QtWidgets.QWidget):
         personal_group.setLayout(personal_layout)
         
         # 操作按钮组
-        action_group = QGroupBox('🚀 操作')
-        action_group.setObjectName('actionGroup')
+        action_group = QGroupBox('操作')
         action_layout = QVBoxLayout()
         
         # 生成按钮行
         generate_layout = QHBoxLayout()
-        self.generate_button = QPushButton('📱 生成二维码')
-        self.generate_button.setObjectName('primaryButton')
+        self.generate_button = QPushButton('生成二维码')
         self.generate_button.setMinimumHeight(40)
-        self.generate_barcode_button = QPushButton('📊 生成条形码')
-        self.generate_barcode_button.setObjectName('primaryButton')
+        self.generate_barcode_button = QPushButton('生成条形码')
         self.generate_barcode_button.setMinimumHeight(40)
         generate_layout.addWidget(self.generate_button)
         generate_layout.addWidget(self.generate_barcode_button)
         
         # 功能按钮行
         function_layout = QHBoxLayout()
-        self.save_button = QPushButton('💾 保存图片')
-        self.save_button.setObjectName('secondaryButton')
+        self.save_button = QPushButton('保存图片')
         self.save_button.setMinimumHeight(36)
-        self.recognize_button = QPushButton('🔍 识别图片')
-        self.recognize_button.setObjectName('secondaryButton')
+        self.recognize_button = QPushButton('识别图片')
         self.recognize_button.setMinimumHeight(36)
         function_layout.addWidget(self.save_button)
         function_layout.addWidget(self.recognize_button)
@@ -173,8 +163,7 @@ class QrCodeGUI(QtWidgets.QWidget):
         right_layout = QVBoxLayout(right_widget)
         right_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
-        preview_group = QGroupBox('👁️ 预览区域')
-        preview_group.setObjectName('previewGroup')
+        preview_group = QGroupBox('预览区域')
         preview_layout = QVBoxLayout()
         preview_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         preview_layout.setContentsMargins(20, 20, 20, 20)
@@ -185,7 +174,6 @@ class QrCodeGUI(QtWidgets.QWidget):
         self.show_label.setMaximumSize(450, 450)
         self.show_label.setFrameStyle(QLabel.Shape.Box | QLabel.Shadow.Plain)
         self.show_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.show_label.setObjectName('previewLabel')
         placeholder_font = QFont()
         placeholder_font.setPointSize(12)
         self.show_label.setFont(placeholder_font)
@@ -199,14 +187,10 @@ class QrCodeGUI(QtWidgets.QWidget):
         main_layout.addWidget(left_widget, 2)
         main_layout.addWidget(right_widget, 3)
         
-        # 状态栏
+        # 设置状态栏
         self.status_bar = QStatusBar()
-        self.status_bar.setObjectName('statusBar')
+        self.setStatusBar(self.status_bar)
         self.status_bar.showMessage('就绪 - 欢迎使用二维码/条形码生成工具')
-        
-        # 组装主容器
-        main_container.addLayout(main_layout)
-        main_container.addWidget(self.status_bar)
         
         # 信号绑定
         self.generate_button.clicked.connect(self.gen_qrcode)
@@ -220,6 +204,56 @@ class QrCodeGUI(QtWidgets.QWidget):
         # 初始化界面状态
         self.toggle_qr_type()
         self.gen_qrcode()
+
+    def create_menu_bar(self):
+        """创建菜单栏"""
+        menubar = self.menuBar()
+
+        # 文件菜单
+        file_menu = menubar.addMenu('文件(&F)')
+
+        # 批量生成二维码
+        batch_action = QtGui.QAction('批量生成二维码(&B)', self)
+        batch_action.setShortcut('Ctrl+B')
+        batch_action.setStatusTip('批量生成多个二维码')
+        batch_action.triggered.connect(self.batch_generate_qrcodes)
+        file_menu.addAction(batch_action)
+
+        file_menu.addSeparator()
+
+        # 退出
+        exit_action = QtGui.QAction('退出(&X)', self)
+        exit_action.setShortcut('Ctrl+Q')
+        exit_action.setStatusTip('退出应用程序')
+        exit_action.triggered.connect(self.close)
+        file_menu.addAction(exit_action)
+
+        # 帮助菜单
+        help_menu = menubar.addMenu('帮助(&H)')
+
+        # 关于
+        about_action = QtGui.QAction('关于(&A)', self)
+        about_action.setStatusTip('关于此应用程序')
+        about_action.triggered.connect(self.show_about)
+        help_menu.addAction(about_action)
+
+    def batch_generate_qrcodes(self):
+        """批量生成二维码"""
+        dialog = BatchGenerateDialog(self)
+        if dialog.exec() == QDialog.Accepted:
+            self.status_bar.showMessage('批量生成完成', 3000)
+
+    def show_about(self):
+        """显示关于对话框"""
+        QMessageBox.about(self, '关于',
+                         '二维码/条形码生成工具\n\n'
+                         '功能：\n'
+                         '• 生成普通二维码\n'
+                         '• 生成个性化二维码\n'
+                         '• 生成条形码\n'
+                         '• 识别二维码/条形码\n'
+                         '• 批量生成二维码\n\n'
+                         '版本：1.0')
 
     def toggle_qr_type(self):
         """切换二维码类型时的界面状态"""
@@ -368,185 +402,184 @@ class QrCodeGUI(QtWidgets.QWidget):
                 self.status_bar.showMessage('✓ 识别成功', 3000)
             except Exception as e:
                 QMessageBox.warning(self, '错误', f'图片识别失败: {e}')
-                self.status_bar.showMessage('✗ 识别失败', 3000)
+                self.status_bar.showMessage('识别失败', 3000)
 
 
-    def apply_stylesheet(self):
-        """应用现代化样式表"""
-        stylesheet = """
-        QWidget {
-            background-color: #f5f5f5;
-            font-family: 'Microsoft YaHei UI', 'Segoe UI', Arial;
-            font-size: 10pt;
-        }
-        
-        QGroupBox {
-            font-weight: bold;
-            font-size: 11pt;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            margin-top: 12px;
-            padding-top: 10px;
-            background-color: white;
-        }
-        
-        QGroupBox::title {
-            subcontrol-origin: margin;
-            subcontrol-position: top left;
-            left: 15px;
-            padding: 0 8px;
-            color: #2c3e50;
-        }
-        
-        #typeGroup, #contentGroup, #paramsGroup, #personalGroup, #actionGroup {
-            background-color: white;
-        }
-        
-        #previewGroup {
-            background-color: #fafafa;
-            border: 2px solid #d0d0d0;
-        }
-        
-        QLineEdit, QComboBox, QSpinBox {
-            padding: 6px 10px;
-            border: 2px solid #dcdcdc;
-            border-radius: 5px;
-            background-color: white;
-            selection-background-color: #3498db;
-        }
-        
-        QLineEdit:focus, QComboBox:focus, QSpinBox:focus {
-            border: 2px solid #3498db;
-        }
-        
-        QPushButton#primaryButton {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 8px 16px;
-            font-weight: bold;
-            font-size: 10pt;
-        }
-        
-        QPushButton#primaryButton:hover {
-            background-color: #2980b9;
-        }
-        
-        QPushButton#primaryButton:pressed {
-            background-color: #21618c;
-        }
-        
-        QPushButton#secondaryButton {
-            background-color: #95a5a6;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 6px 14px;
-            font-weight: bold;
-        }
-        
-        QPushButton#secondaryButton:hover {
-            background-color: #7f8c8d;
-        }
-        
-        QPushButton#secondaryButton:pressed {
-            background-color: #6c7a7b;
-        }
-        
-        QPushButton {
-            background-color: #ecf0f1;
-            color: #2c3e50;
-            border: 1px solid #bdc3c7;
-            border-radius: 5px;
-            padding: 5px 12px;
-        }
-        
-        QPushButton:hover {
-            background-color: #d5dbdb;
-        }
-        
-        QPushButton:pressed {
-            background-color: #bdc3c7;
-        }
-        
-        QPushButton:disabled {
-            background-color: #ecf0f1;
-            color: #95a5a6;
-        }
-        
-        QRadioButton {
-            spacing: 8px;
-            color: #2c3e50;
-        }
-        
-        QRadioButton::indicator {
-            width: 18px;
-            height: 18px;
-        }
-        
-        QRadioButton::indicator:unchecked {
-            border: 2px solid #95a5a6;
-            border-radius: 9px;
-            background-color: white;
-        }
-        
-        QRadioButton::indicator:checked {
-            border: 2px solid #3498db;
-            border-radius: 9px;
-            background-color: #3498db;
-        }
-        
-        QCheckBox {
-            spacing: 8px;
-            color: #2c3e50;
-        }
-        
-        QCheckBox::indicator {
-            width: 18px;
-            height: 18px;
-        }
-        
-        QCheckBox::indicator:unchecked {
-            border: 2px solid #95a5a6;
-            border-radius: 3px;
-            background-color: white;
-        }
-        
-        QCheckBox::indicator:checked {
-            border: 2px solid #27ae60;
-            border-radius: 3px;
-            background-color: #27ae60;
-        }
-        
-        QLabel#previewLabel {
-            background-color: white;
-            border: 3px dashed #bdc3c7;
-            border-radius: 8px;
-            color: #95a5a6;
-            padding: 20px;
-        }
-        
-        QStatusBar {
-            background-color: #34495e;
-            color: white;
-            font-size: 9pt;
-            padding: 4px;
-        }
-        
-        QStatusBar::item {
-            border: none;
-        }
-        """
-        self.setStyleSheet(stylesheet)
+class BatchGenerateDialog(QDialog):
+    """批量生成二维码对话框"""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle('批量生成二维码')
+        self.setModal(True)
+        self.setMinimumSize(600, 500)
+
+        layout = QVBoxLayout(self)
+
+        # 输入区域
+        input_group = QGroupBox('输入设置')
+        input_layout = QFormLayout()
+
+        self.data_edit = QTextEdit()
+        self.data_edit.setPlaceholderText('请输入要生成二维码的内容，每行一个：\n例如：\nhttps://www.example.com\n联系电话：13800138000\n产品名称：XXX')
+        self.data_edit.setMinimumHeight(150)
+
+        input_layout.addRow('数据列表:', self.data_edit)
+        input_group.setLayout(input_layout)
+
+        # 输出设置
+        output_group = QGroupBox('输出设置')
+        output_layout = QFormLayout()
+
+        self.output_dir_edit = QLineEdit()
+        self.output_dir_edit.setPlaceholderText('选择输出目录...')
+        self.output_dir_button = QPushButton('选择目录')
+        self.output_dir_button.clicked.connect(self.select_output_dir)
+
+        dir_layout = QHBoxLayout()
+        dir_layout.addWidget(self.output_dir_edit)
+        dir_layout.addWidget(self.output_dir_button)
+
+        self.prefix_edit = QLineEdit()
+        self.prefix_edit.setPlaceholderText('文件名前缀（可选）')
+
+        self.format_combo = QComboBox()
+        self.format_combo.addItems(['PNG', 'JPEG', 'BMP'])
+
+        output_layout.addRow('输出目录:', dir_layout)
+        output_layout.addRow('文件名前缀:', self.prefix_edit)
+        output_layout.addRow('图片格式:', self.format_combo)
+        output_group.setLayout(output_layout)
+
+        # 二维码参数
+        params_group = QGroupBox('二维码参数')
+        params_layout = QFormLayout()
+
+        self.version_spin = QSpinBox()
+        self.version_spin.setRange(1, 40)
+        self.version_spin.setValue(1)
+
+        self.size_spin = QSpinBox()
+        self.size_spin.setRange(100, 1000)
+        self.size_spin.setValue(200)
+        self.size_spin.setSuffix(' px')
+
+        self.margin_spin = QSpinBox()
+        self.margin_spin.setRange(0, 20)
+        self.margin_spin.setValue(4)
+
+        params_layout.addRow('版本:', self.version_spin)
+        params_layout.addRow('尺寸:', self.size_spin)
+        params_layout.addRow('边距:', self.margin_spin)
+        params_group.setLayout(params_layout)
+
+        # 按钮
+        button_layout = QHBoxLayout()
+        self.generate_button = QPushButton('开始生成')
+        self.generate_button.clicked.connect(self.generate_batch)
+        self.cancel_button = QPushButton('取消')
+        self.cancel_button.clicked.connect(self.reject)
+
+        button_layout.addStretch()
+        button_layout.addWidget(self.generate_button)
+        button_layout.addWidget(self.cancel_button)
+
+        # 布局组装
+        layout.addWidget(input_group)
+        layout.addWidget(output_group)
+        layout.addWidget(params_group)
+        layout.addLayout(button_layout)
+
+    def select_output_dir(self):
+        """选择输出目录"""
+        dir_path = QFileDialog.getExistingDirectory(self, '选择输出目录')
+        if dir_path:
+            self.output_dir_edit.setText(dir_path)
+
+    def generate_batch(self):
+        """批量生成二维码"""
+        data_text = self.data_edit.toPlainText().strip()
+        if not data_text:
+            QMessageBox.warning(self, '错误', '请输入要生成二维码的数据')
+            return
+
+        output_dir = self.output_dir_edit.text().strip()
+        if not output_dir:
+            QMessageBox.warning(self, '错误', '请选择输出目录')
+            return
+
+        lines = [line.strip() for line in data_text.split('\n') if line.strip()]
+        if not lines:
+            QMessageBox.warning(self, '错误', '没有有效的数据')
+            return
+
+        prefix = self.prefix_edit.text().strip()
+        if prefix and not prefix.endswith('_'):
+            prefix += '_'
+
+        # 创建进度对话框
+        progress = QProgressDialog('正在生成二维码...', '取消', 0, len(lines), self)
+        progress.setWindowTitle('批量生成进度')
+        progress.setMinimumDuration(0)
+        progress.setModal(True)
+
+        success_count = 0
+        error_count = 0
+
+        try:
+            for i, content in enumerate(lines):
+                if progress.wasCanceled():
+                    break
+
+                progress.setLabelText(f'正在生成第 {i+1}/{len(lines)} 个二维码...')
+                progress.setValue(i)
+
+                # 生成文件名
+                filename = f"{prefix}qrcode_{i+1}.{self.format_combo.currentText().lower()}"
+                filepath = f"{output_dir}/{filename}"
+
+                try:
+                    # 生成二维码
+                    qr = qrcode.QRCode(
+                        version=self.version_spin.value(),
+                        error_correction=qrcode.ERROR_CORRECT_L,
+                        box_size=self.size_spin.value() // 29,
+                        border=self.margin_spin.value()
+                    )
+                    qr.add_data(content)
+                    qr_img = qr.make_image()
+
+                    # 保存图片
+                    qr_img.save(filepath)
+                    success_count += 1
+
+                except Exception as e:
+                    error_count += 1
+                    print(f"生成二维码失败: {content}, 错误: {e}")
+
+            progress.setValue(len(lines))
+
+            # 显示结果
+            QMessageBox.information(
+                self, '批量生成完成',
+                f'生成完成！\n'
+                f'成功: {success_count} 个\n'
+                f'失败: {error_count} 个\n'
+                f'输出目录: {output_dir}'
+            )
+
+            if success_count > 0:
+                self.accept()
+
+        except Exception as e:
+            QMessageBox.critical(self, '错误', f'批量生成过程中发生错误: {e}')
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    
-    # 设置应用程序样式
-    app.setStyle('Fusion')
-    
+
+    # 使用Windows原生样式
+    app.setStyle('WindowsVista')  # 在Windows上使用原生样式
+
     gui = QrCodeGUI()
     gui.show()
     sys.exit(app.exec())
