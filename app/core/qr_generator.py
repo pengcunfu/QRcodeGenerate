@@ -305,7 +305,6 @@ class QRCodeController:
         self.ui.margin_spinbox.valueChanged.connect(self.on_generate_qrcode)
         self.ui.generate_barcode_button.clicked.connect(self.on_generate_barcode)
         self.ui.recognize_button.clicked.connect(self.on_recognize_code)
-        self.ui.clipboard_button.clicked.connect(self.on_recognize_clipboard)
         self.ui.picture_button.clicked.connect(self.on_select_picture)
 
         # 连接单选按钮信号
@@ -313,6 +312,8 @@ class QRCodeController:
 
         # 连接菜单动作信号
         self.ui.batch_action.triggered.connect(self.on_batch_generate_qrcodes)
+        self.ui.recognize_file_action.triggered.connect(self.on_recognize_code)
+        self.ui.recognize_clipboard_action.triggered.connect(self.on_recognize_clipboard)
         self.ui.about_action.triggered.connect(self.on_show_about)
 
     def on_generate_qrcode(self):
@@ -383,18 +384,13 @@ class QRCodeController:
 
             if filename:
                 results = self.generator.recognize_code(filename)
-                if not results:
-                    self.generator.show_info_message(
-                        self.ui, '识别结果', '未识别到二维码或条形码内容'
-                    )
-                    self.ui.show_status_message('⚠ 未识别到内容', 3000)
-                    return
 
-                msg = '\n'.join([f'{r.type}: {r.data.decode()}' for r in results])
-                self.generator.show_info_message(
-                    self.ui, '识别结果', f'识别成功！\n\n{msg}'
-                )
-                self.ui.show_status_message('✓ 识别成功', 3000)
+                # 使用自定义对话框显示结果
+                from ui.main_window import RecognizeResultDialog
+                dialog = RecognizeResultDialog(results, self.ui)
+                dialog.exec()
+
+                self.ui.show_status_message('✓ 识别完成', 3000)
 
         except Exception as e:
             self.generator.show_error_message(self.ui, '错误', f'图片识别失败: {e}')
@@ -404,18 +400,13 @@ class QRCodeController:
         """识别剪贴板按钮点击事件"""
         try:
             results = self.generator.recognize_clipboard()
-            if not results:
-                self.generator.show_info_message(
-                    self.ui, '识别结果', '剪贴板中未识别到二维码或条形码内容'
-                )
-                self.ui.show_status_message('⚠ 剪贴板未识别到内容', 3000)
-                return
 
-            msg = '\n'.join([f'{r.type}: {r.data.decode()}' for r in results])
-            self.generator.show_info_message(
-                self.ui, '识别结果', f'剪贴板识别成功！\n\n{msg}'
-            )
-            self.ui.show_status_message('✓ 剪贴板识别成功', 3000)
+            # 使用自定义对话框显示结果
+            from ui.main_window import RecognizeResultDialog
+            dialog = RecognizeResultDialog(results, self.ui)
+            dialog.exec()
+
+            self.ui.show_status_message('✓ 剪贴板识别完成', 3000)
 
         except Exception as e:
             self.generator.show_error_message(self.ui, '错误', f'剪贴板识别失败: {e}')

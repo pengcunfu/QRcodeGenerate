@@ -164,11 +164,8 @@ class QrCodeGUI(QMainWindow):
         self.save_button.setMinimumHeight(36)
         self.recognize_button = QPushButton('识别图片')
         self.recognize_button.setMinimumHeight(36)
-        self.clipboard_button = QPushButton('识别剪贴板')
-        self.clipboard_button.setMinimumHeight(36)
         function_layout.addWidget(self.save_button)
         function_layout.addWidget(self.recognize_button)
-        function_layout.addWidget(self.clipboard_button)
 
         action_layout.addLayout(generate_layout)
         action_layout.addLayout(function_layout)
@@ -226,6 +223,21 @@ class QrCodeGUI(QMainWindow):
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
 
+        # 识别菜单
+        recognize_menu = menubar.addMenu('识别(&R)')
+
+        # 识别图片文件
+        recognize_file_action = QtGui.QAction('识别图片文件(&F)', self)
+        recognize_file_action.setShortcut('Ctrl+O')
+        recognize_file_action.setStatusTip('识别本地图片文件中的二维码/条形码')
+        recognize_menu.addAction(recognize_file_action)
+
+        # 识别剪贴板
+        recognize_clipboard_action = QtGui.QAction('识别剪贴板(&C)', self)
+        recognize_clipboard_action.setShortcut('Ctrl+V')
+        recognize_clipboard_action.setStatusTip('识别剪贴板中的二维码/条形码')
+        recognize_menu.addAction(recognize_clipboard_action)
+
         # 帮助菜单
         help_menu = menubar.addMenu('帮助(&H)')
 
@@ -236,6 +248,8 @@ class QrCodeGUI(QMainWindow):
 
         # 返回菜单动作供外部连接信号
         self.batch_action = batch_action
+        self.recognize_file_action = recognize_file_action
+        self.recognize_clipboard_action = recognize_clipboard_action
         self.about_action = about_action
 
     def set_app_icon(self):
@@ -333,6 +347,93 @@ class QrCodeGUI(QMainWindow):
             "图片文件 (*.png *.jpg *.jpeg *.gif *.bmp)"
         )
         return file_path
+
+
+class RecognizeResultDialog(QtWidgets.QDialog):
+    """识别结果对话框"""
+
+    def __init__(self, results, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle('识别结果')
+        self.setModal(True)
+        self.setMinimumSize(500, 400)
+
+        self.results = results
+        self.setup_ui()
+
+    def setup_ui(self):
+        """设置对话框界面"""
+        layout = QVBoxLayout(self)
+
+        # 结果说明
+        info_label = QtWidgets.QLabel('识别结果：')
+        info_label.setStyleSheet("font-weight: bold; font-size: 12pt;")
+        layout.addWidget(info_label)
+
+        # 结果展示区域
+        self.result_text = QtWidgets.QTextEdit()
+        self.result_text.setReadOnly(True)
+        self.result_text.setMinimumHeight(200)
+
+        # 格式化显示结果
+        result_text = ""
+        if self.results:
+            for i, result in enumerate(self.results, 1):
+                content = result.data.decode('utf-8')
+                result_type = result.type
+                result_text += f"结果 {i}:\n"
+                result_text += f"类型: {result_type}\n"
+                result_text += f"内容: {content}\n"
+                if i < len(self.results):
+                    result_text += "-" * 40 + "\n"
+            self.result_text.setText(result_text)
+        else:
+            self.result_text.setText("未识别到二维码或条形码内容")
+
+        layout.addWidget(self.result_text)
+
+        # 按钮区域
+        button_layout = QHBoxLayout()
+
+        self.copy_button = QtWidgets.QPushButton('复制内容')
+        self.copy_button.clicked.connect(self.copy_content)
+
+        self.copy_all_button = QtWidgets.QPushButton('复制全部')
+        self.copy_all_button.clicked.connect(self.copy_all)
+
+        self.close_button = QtWidgets.QPushButton('关闭')
+        self.close_button.clicked.connect(self.accept)
+
+        button_layout.addStretch()
+        button_layout.addWidget(self.copy_button)
+        button_layout.addWidget(self.copy_all_button)
+        button_layout.addWidget(self.close_button)
+
+        layout.addLayout(button_layout)
+
+    def copy_content(self):
+        """复制识别到的内容"""
+        if self.results:
+            contents = [result.data.decode('utf-8') for result in self.results]
+            content_text = '\n'.join(contents)
+
+            from PySide6.QtWidgets import QApplication
+            clipboard = QApplication.clipboard()
+            clipboard.setText(content_text)
+
+            QtWidgets.QMessageBox.information(self, '复制成功', f'已复制 {len(contents)} 个识别内容到剪贴板')
+        else:
+            QtWidgets.QMessageBox.warning(self, '警告', '没有可复制的内容')
+
+    def copy_all(self):
+        """复制所有结果信息（包含类型和格式）"""
+        all_text = self.result_text.toPlainText()
+
+        from PySide6.QtWidgets import QApplication
+        clipboard = QApplication.clipboard()
+        clipboard.setText(all_text)
+
+        QtWidgets.QMessageBox.information(self, '复制成功', '已复制完整识别结果到剪贴板')
 
 
 class BatchGenerateDialog(QtWidgets.QDialog):
