@@ -149,6 +149,55 @@ class QRCodeGenerator:
         except Exception as e:
             raise Exception(f"图片识别失败: {e}")
 
+    def recognize_clipboard(self):
+        """
+        识别剪贴板中的二维码/条形码
+
+        Returns:
+            list: 识别结果列表
+        """
+        try:
+            from PySide6.QtWidgets import QApplication
+            from PySide6.QtGui import QImage
+            from PySide6.QtCore import QBuffer, QIODevice
+            import io
+
+            clipboard = QApplication.clipboard()
+            mime_data = clipboard.mimeData()
+
+            # 检查剪贴板是否包含图片
+            if mime_data.hasImage():
+                # 获取剪贴板中的图片
+                qimage = clipboard.image()
+                if not qimage.isNull():
+                    # 将QImage转换为PIL Image
+                    buffer = QBuffer()
+                    buffer.open(QIODevice.ReadWrite)
+                    qimage.save(buffer, "BMP")
+                    pil_image = Image.open(io.BytesIO(buffer.data()))
+
+                    # 识别二维码/条形码
+                    results = decode(pil_image)
+                    return results
+
+            elif mime_data.hasText():
+                # 检查是否是图片文件的路径
+                text = mime_data.text().strip()
+                if text.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
+                    try:
+                        # 尝试作为文件路径打开
+                        img = Image.open(text)
+                        results = decode(img)
+                        return results
+                    except:
+                        # 如果不是有效的图片文件路径，继续其他检查
+                        pass
+
+            raise Exception("剪贴板中没有有效的二维码图片")
+
+        except Exception as e:
+            raise Exception(f"剪贴板识别失败: {e}")
+
     def batch_generate_qrcodes(self, parent_widget, batch_data):
         """
         批量生成二维码
@@ -256,6 +305,7 @@ class QRCodeController:
         self.ui.margin_spinbox.valueChanged.connect(self.on_generate_qrcode)
         self.ui.generate_barcode_button.clicked.connect(self.on_generate_barcode)
         self.ui.recognize_button.clicked.connect(self.on_recognize_code)
+        self.ui.clipboard_button.clicked.connect(self.on_recognize_clipboard)
         self.ui.picture_button.clicked.connect(self.on_select_picture)
 
         # 连接单选按钮信号
@@ -349,6 +399,27 @@ class QRCodeController:
         except Exception as e:
             self.generator.show_error_message(self.ui, '错误', f'图片识别失败: {e}')
             self.ui.show_status_message('识别失败', 3000)
+
+    def on_recognize_clipboard(self):
+        """识别剪贴板按钮点击事件"""
+        try:
+            results = self.generator.recognize_clipboard()
+            if not results:
+                self.generator.show_info_message(
+                    self.ui, '识别结果', '剪贴板中未识别到二维码或条形码内容'
+                )
+                self.ui.show_status_message('⚠ 剪贴板未识别到内容', 3000)
+                return
+
+            msg = '\n'.join([f'{r.type}: {r.data.decode()}' for r in results])
+            self.generator.show_info_message(
+                self.ui, '识别结果', f'剪贴板识别成功！\n\n{msg}'
+            )
+            self.ui.show_status_message('✓ 剪贴板识别成功', 3000)
+
+        except Exception as e:
+            self.generator.show_error_message(self.ui, '错误', f'剪贴板识别失败: {e}')
+            self.ui.show_status_message('剪贴板识别失败', 3000)
 
     def on_select_picture(self):
         """选择背景图片按钮点击事件"""

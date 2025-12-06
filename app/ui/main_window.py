@@ -164,8 +164,11 @@ class QrCodeGUI(QMainWindow):
         self.save_button.setMinimumHeight(36)
         self.recognize_button = QPushButton('识别图片')
         self.recognize_button.setMinimumHeight(36)
+        self.clipboard_button = QPushButton('识别剪贴板')
+        self.clipboard_button.setMinimumHeight(36)
         function_layout.addWidget(self.save_button)
         function_layout.addWidget(self.recognize_button)
+        function_layout.addWidget(self.clipboard_button)
 
         action_layout.addLayout(generate_layout)
         action_layout.addLayout(function_layout)

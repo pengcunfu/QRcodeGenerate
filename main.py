@@ -7,6 +7,14 @@ genQrcode
 pip install PySide6
 pip install qrcode
 pip install MyQR
+
+功能：
+• 生成普通二维码
+• 生成个性化二维码
+• 生成条形码
+• 识别图片中的二维码/条形码
+• 识别剪贴板中的二维码/条形码
+• 批量生成二维码
 """
 import sys
 from PySide6.QtWidgets import QApplication

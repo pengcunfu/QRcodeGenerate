@@ -5,3 +5,4 @@ pyzbar
 Pillow
 MyQR
 pyinstaller
+opencv-python
