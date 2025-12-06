@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (QApplication, QLabel, QLineEdit, QPushButton,
 from ..core.qr_generator_engine import QRCodeGenerator
 from ..core.qr_scanner_engine import QRCodeScanner
 from PySide6.QtGui import QPixmap, QFont, QImage
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QPoint
 from .dialogs import RecognizeResultDialog, BatchGenerateDialog
 
 
@@ -203,6 +203,10 @@ class QrCodeGUI(QMainWindow):
         placeholder_font.setPointSize(12)
         self.show_label.setFont(placeholder_font)
         self.show_label.setText('预览区域\n\n生成的二维码/条形码\n将显示在这里')
+
+        # 启用右键菜单
+        self.show_label.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.show_label.customContextMenuRequested.connect(self.show_preview_context_menu)
 
         preview_layout.addWidget(self.show_label)
         preview_group.setLayout(preview_layout)
@@ -548,3 +552,69 @@ class QrCodeGUI(QMainWindow):
             "图片文件 (*.png *.jpg *.jpeg *.gif *.bmp)"
         )
         return file_path
+
+    def show_preview_context_menu(self, position):
+        """显示预览区域的右键菜单"""
+        # 检查是否有图片显示
+        if not hasattr(self, 'qr_img') or self.qr_img is None:
+            return
+
+        # 创建右键菜单
+        context_menu = QtWidgets.QMenu(self)
+
+        # 复制图片动作
+        copy_action = context_menu.addAction('复制图片')
+        copy_action.triggered.connect(self.copy_preview_image)
+
+        # 保存图片动作
+        save_action = context_menu.addAction('保存图片')
+        save_action.triggered.connect(self.save_preview_image)
+
+        # 显示菜单
+        context_menu.exec(self.show_label.mapToGlobal(position))
+
+    def copy_preview_image(self):
+        """复制预览图片到剪贴板"""
+        try:
+            if hasattr(self, 'qr_img') and self.qr_img is not None:
+                from PySide6.QtWidgets import QApplication
+                from PySide6.QtGui import QPixmap
+                import io
+
+                # 将PIL图片转换为QPixmap
+                if hasattr(self.qr_img, 'save'):  # PIL Image
+                    buffer = io.BytesIO()
+                    self.qr_img.save(buffer, 'BMP')
+                    buffer.seek(0)
+                    qimg = QImage()
+                    qimg.loadFromData(buffer.getvalue())
+                    pixmap = QPixmap.fromImage(qimg)
+                else:  # 已经是QImage或QPixmap
+                    pixmap = self.qr_img if isinstance(self.qr_img, QPixmap) else QPixmap.fromImage(self.qr_img)
+
+                # 复制到剪贴板
+                clipboard = QApplication.clipboard()
+                clipboard.setPixmap(pixmap)
+
+                self.show_status_message('✓ 图片已复制到剪贴板', 3000)
+            else:
+                QMessageBox.warning(self, '错误', '没有可复制的图片')
+        except Exception as e:
+            QMessageBox.warning(self, '错误', f'复制图片失败: {e}')
+
+    def save_preview_image(self):
+        """保存预览图片"""
+        try:
+            if hasattr(self, 'qr_img') and self.qr_img is not None:
+                filename, _ = QFileDialog.getSaveFileName(
+                    self, '保存图片', './qrcode.png',
+                    '图片文件 (*.png *.jpg *.jpeg *.bmp);;PNG文件 (*.png);;JPEG文件 (*.jpg *.jpeg);;BMP文件 (*.bmp);;所有文件 (*)'
+                )
+                if filename:
+                    self.qr_img.save(filename)
+                    QMessageBox.information(self, '成功', '图片保存成功！')
+                    self.show_status_message(f'✓ 图片已保存: {filename}', 5000)
+            else:
+                QMessageBox.warning(self, '错误', '没有可保存的图片')
+        except Exception as e:
+            QMessageBox.warning(self, '错误', f'保存图片失败: {e}')
