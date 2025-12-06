@@ -3,6 +3,7 @@
 负责所有GUI界面的创建和布局
 """
 import sys
+import webbrowser
 from PySide6 import QtWidgets, QtGui
 from PySide6.QtWidgets import (QApplication, QLabel, QLineEdit, QPushButton,
                                 QComboBox, QSpinBox, QFileDialog, QMessageBox,
@@ -249,6 +250,16 @@ class QrCodeGUI(QMainWindow):
         recognize_clipboard_action.setStatusTip('识别剪贴板中的二维码/条形码')
         recognize_menu.addAction(recognize_clipboard_action)
 
+        # 工具菜单
+        tools_menu = menubar.addMenu('工具(&T)')
+
+
+
+        # 草料二维码
+        caoliaovip_action = QtGui.QAction('草料二维码(&C)', self)
+        caoliaovip_action.setStatusTip('在线二维码生成工具 - https://cli.im/')
+        tools_menu.addAction(caoliaovip_action)
+
         # 帮助菜单
         help_menu = menubar.addMenu('帮助(&H)')
 
@@ -256,6 +267,9 @@ class QrCodeGUI(QMainWindow):
         about_action = QtGui.QAction('关于(&A)', self)
         about_action.setStatusTip('关于此应用程序')
         help_menu.addAction(about_action)
+
+        # 连接菜单项的信号
+        caoliaovip_action.triggered.connect(lambda: webbrowser.open('https://cli.im/'))
 
         # 返回菜单动作供外部连接信号
         self.batch_action = batch_action
