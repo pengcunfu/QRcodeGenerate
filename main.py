@@ -11,8 +11,8 @@ pip install MyQR
 import sys
 from PySide6.QtWidgets import QApplication
 from PySide6 import QtGui
-from ui.main_window import QrCodeGUI, BatchGenerateDialog
-from core.qr_generator import QRCodeController
+from app.ui.main_window import QrCodeGUI, BatchGenerateDialog
+from app.core.qr_generator import QRCodeController
 
 
 def main():
