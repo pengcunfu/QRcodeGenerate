@@ -8,9 +8,12 @@ from PySide6.QtWidgets import (QApplication, QLabel, QLineEdit, QPushButton,
                                 QComboBox, QSpinBox, QFileDialog, QMessageBox,
                                 QRadioButton, QButtonGroup, QCheckBox, QVBoxLayout,
                                 QHBoxLayout, QFormLayout, QGroupBox, QStatusBar,
-                                QMainWindow, QTextEdit, QProgressDialog)
+                                QMainWindow, QProgressDialog)
+from ..core.qr_generator_engine import QRCodeGenerator
+from ..core.qr_scanner_engine import QRCodeScanner
 from PySide6.QtGui import QPixmap, QFont, QImage
 from PySide6.QtCore import Qt
+from .dialogs import RecognizeResultDialog, BatchGenerateDialog
 
 
 class QrCodeGUI(QMainWindow):
@@ -23,6 +26,10 @@ class QrCodeGUI(QMainWindow):
 
         # 初始化变量
         self.picture_path = ""
+
+        # 初始化核心引擎
+        self.generator = QRCodeGenerator()
+        self.scanner = QRCodeScanner()
 
         # 设置应用程序图标
         self.set_app_icon()
@@ -280,6 +287,200 @@ class QrCodeGUI(QMainWindow):
         self.check_colorized.setEnabled(False)
         self.picture_status.setEnabled(False)
 
+        # 连接信号
+        self.setup_connections()
+
+        # 生成初始二维码
+        self.generate_qrcode()
+
+    def setup_connections(self):
+        """设置信号连接"""
+        # 连接按钮信号
+        self.generate_button.clicked.connect(self.on_generate_qrcode)
+        self.save_button.clicked.connect(self.on_save_qrcode)
+        self.margin_spinbox.valueChanged.connect(self.on_generate_qrcode)
+        self.generate_barcode_button.clicked.connect(self.on_generate_barcode)
+        self.recognize_button.clicked.connect(self.on_recognize_code)
+        self.picture_button.clicked.connect(self.on_select_picture)
+
+        # 连接单选按钮信号
+        self.radio_simple.toggled.connect(self.on_toggle_qr_type)
+
+        # 连接菜单动作信号
+        self.batch_action.triggered.connect(self.on_batch_generate_qrcodes)
+        self.recognize_file_action.triggered.connect(self.on_recognize_code)
+        self.recognize_clipboard_action.triggered.connect(self.on_recognize_clipboard)
+        self.about_action.triggered.connect(self.on_show_about)
+
+    # 事件处理方法
+    def on_generate_qrcode(self):
+        """生成二维码按钮点击事件"""
+        content = self.get_content()
+
+        try:
+            if self.get_current_qr_type() == 'simple':
+                # 生成普通二维码
+                params = self.get_qr_params()
+                qr_img = self.generator.generate_simple_qrcode(content, params)
+                self.show_qrcode(qr_img)
+                self.show_status_message('✓ 普通二维码生成成功', 3000)
+            else:
+                # 生成个性化二维码
+                params = self.get_personal_params()
+                qr_img = self.generator.generate_personal_qrcode(content, params)
+                self.show_qrcode(qr_img)
+                self.show_status_message('✓ 个性化二维码生成成功', 3000)
+
+        except Exception as e:
+            QMessageBox.warning(self, '错误', str(e))
+            self.show_status_message('✗ 生成失败', 3000)
+
+    def generate_qrcode(self):
+        """生成二维码的简化方法"""
+        self.on_generate_qrcode()
+
+    def on_save_qrcode(self):
+        """保存图片按钮点击事件"""
+        if not hasattr(self, 'qr_img') or self.qr_img is None:
+            QMessageBox.warning(self, '错误', '请先生成二维码或条形码')
+            return
+
+        try:
+            filename, _ = QFileDialog.getSaveFileName(
+                self, '保存图片', './qrcode.png',
+                '图片文件 (*.png);;所有文件 (*)'
+            )
+            if filename:
+                self.qr_img.save(filename)
+                QMessageBox.information(self, '成功', '图片保存成功！')
+                self.show_status_message(f'✓ 图片已保存: {filename}', 5000)
+
+        except Exception as e:
+            QMessageBox.warning(self, '错误', f'保存失败: {e}')
+
+    def on_generate_barcode(self):
+        """生成条形码按钮点击事件"""
+        content = self.get_content()
+
+        try:
+            barcode_img = self.generator.generate_barcode(content)
+            self.show_qrcode(barcode_img)
+            self.show_status_message('✓ 条形码生成成功', 3000)
+
+        except Exception as e:
+            QMessageBox.warning(self, '错误', str(e))
+            self.show_status_message('✗ 条形码生成失败', 3000)
+
+    def on_recognize_code(self):
+        """识别图片按钮点击事件"""
+        try:
+            filename, _ = QFileDialog.getOpenFileName(
+                self, '选择图片', '',
+                '图片文件 (*.png *.jpg *.jpeg *.bmp *.gif);;所有文件 (*)'
+            )
+
+            if filename:
+                results = self.scanner.recognize_code(filename)
+                self.show_recognize_results(results, "图片识别完成")
+
+        except Exception as e:
+            QMessageBox.warning(self, '错误', f'图片识别失败: {e}')
+            self.show_status_message('识别失败', 3000)
+
+    def on_recognize_clipboard(self):
+        """识别剪贴板按钮点击事件"""
+        try:
+            results = self.scanner.recognize_clipboard()
+            self.show_recognize_results(results, "剪贴板识别完成")
+
+        except Exception as e:
+            QMessageBox.warning(self, '错误', f'剪贴板识别失败: {e}')
+            self.show_status_message('剪贴板识别失败', 3000)
+
+    def on_select_picture(self):
+        """选择背景图片按钮点击事件"""
+        file_path = self.select_picture_file()
+        if file_path:
+            self.picture_path = file_path
+            filename = file_path.split("/")[-1] if "/" in file_path else file_path.split("\\")[-1]
+            if len(filename) > 20:
+                filename = filename[:17] + "..."
+            self.set_picture_status(f'✓ {filename}')
+            self.show_status_message(f'背景图片已选择: {filename}', 3000)
+
+    def on_toggle_qr_type(self):
+        """切换二维码类型事件"""
+        is_simple = self.radio_simple.isChecked()
+        # 普通二维码参数控件的可见性
+        self.version_combobox.setEnabled(is_simple)
+        self.size_combobox.setEnabled(is_simple)
+        self.margin_spinbox.setEnabled(is_simple)
+        # 个性化选项的可见性
+        self.picture_button.setEnabled(not is_simple)
+        self.check_colorized.setEnabled(not is_simple)
+        self.picture_status.setEnabled(not is_simple)
+
+    def on_batch_generate_qrcodes(self):
+        """批量生成二维码菜单事件"""
+        dialog = BatchGenerateDialog(self)
+        dialog.setup_batch_logic(self)
+
+        if dialog.exec() == QtWidgets.QDialog.DialogCode.Accepted:
+            self.show_status_message('批量生成完成', 3000)
+
+    def on_batch_generate_with_data(self, batch_data):
+        """执行批量生成二维码"""
+        # 创建进度对话框
+        progress = QProgressDialog('正在生成二维码...', '取消', 0, len(batch_data.get('lines', [])), self)
+        progress.setWindowTitle('批量生成进度')
+        progress.setMinimumDuration(0)
+        progress.setModal(True)
+
+        # 定义进度回调函数
+        def progress_callback(current, total, message):
+            progress.setLabelText(message)
+            progress.setValue(current)
+            return progress.wasCanceled()
+
+        try:
+            success_count, error_count = self.generator.batch_generate_qrcodes(batch_data, progress_callback)
+            progress.setValue(progress.maximum())
+
+            # 显示结果
+            QMessageBox.information(
+                self, '批量生成完成',
+                f'生成完成！\n'
+                f'成功: {success_count} 个\n'
+                f'失败: {error_count} 个\n'
+                f'输出目录: {batch_data.get("output_dir", "")}'
+            )
+
+            if success_count > 0:
+                QtWidgets.QDialog.accept(dialog)
+
+        except Exception as e:
+            QMessageBox.warning(self, '错误', f'批量生成过程中发生错误: {e}')
+
+    def on_show_about(self):
+        """显示关于对话框"""
+        QMessageBox.about(
+            self, '关于',
+            '二维码/条形码生成工具\n\n'
+            '功能：\n'
+            '• 生成普通二维码\n'
+            '• 生成个性化二维码\n'
+            '• 生成条形码\n'
+            '• 识别二维码/条形码\n'
+            '• 批量生成二维码\n\n'
+            '版本：1.0'
+        )
+
+    def show_recognize_results(self, results, status_message):
+        """显示识别结果对话框"""
+        dialog = RecognizeResultDialog(results, self)
+        dialog.exec()
+        self.show_status_message(f'✓ {status_message}', 3000)
+
     def get_current_qr_type(self):
         """获取当前选择的二维码类型"""
         return 'simple' if self.radio_simple.isChecked() else 'personal'
@@ -347,204 +548,3 @@ class QrCodeGUI(QMainWindow):
             "图片文件 (*.png *.jpg *.jpeg *.gif *.bmp)"
         )
         return file_path
-
-
-class RecognizeResultDialog(QtWidgets.QDialog):
-    """识别结果对话框"""
-
-    def __init__(self, results, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle('识别结果')
-        self.setModal(True)
-        self.setMinimumSize(500, 400)
-
-        self.results = results
-        self.setup_ui()
-
-    def setup_ui(self):
-        """设置对话框界面"""
-        layout = QVBoxLayout(self)
-
-        # 结果说明
-        info_label = QtWidgets.QLabel('识别结果：')
-        info_label.setStyleSheet("font-weight: bold; font-size: 12pt;")
-        layout.addWidget(info_label)
-
-        # 结果展示区域
-        self.result_text = QtWidgets.QTextEdit()
-        self.result_text.setReadOnly(True)
-        self.result_text.setMinimumHeight(200)
-
-        # 格式化显示结果
-        result_text = ""
-        if self.results:
-            for i, result in enumerate(self.results, 1):
-                content = result.data.decode('utf-8')
-                result_type = result.type
-                result_text += f"结果 {i}:\n"
-                result_text += f"类型: {result_type}\n"
-                result_text += f"内容: {content}\n"
-                if i < len(self.results):
-                    result_text += "-" * 40 + "\n"
-            self.result_text.setText(result_text)
-        else:
-            self.result_text.setText("未识别到二维码或条形码内容")
-
-        layout.addWidget(self.result_text)
-
-        # 按钮区域
-        button_layout = QHBoxLayout()
-
-        self.copy_button = QtWidgets.QPushButton('复制内容')
-        self.copy_button.clicked.connect(self.copy_content)
-
-        self.copy_all_button = QtWidgets.QPushButton('复制全部')
-        self.copy_all_button.clicked.connect(self.copy_all)
-
-        self.close_button = QtWidgets.QPushButton('关闭')
-        self.close_button.clicked.connect(self.accept)
-
-        button_layout.addStretch()
-        button_layout.addWidget(self.copy_button)
-        button_layout.addWidget(self.copy_all_button)
-        button_layout.addWidget(self.close_button)
-
-        layout.addLayout(button_layout)
-
-    def copy_content(self):
-        """复制识别到的内容"""
-        if self.results:
-            contents = [result.data.decode('utf-8') for result in self.results]
-            content_text = '\n'.join(contents)
-
-            from PySide6.QtWidgets import QApplication
-            clipboard = QApplication.clipboard()
-            clipboard.setText(content_text)
-
-            QtWidgets.QMessageBox.information(self, '复制成功', f'已复制 {len(contents)} 个识别内容到剪贴板')
-        else:
-            QtWidgets.QMessageBox.warning(self, '警告', '没有可复制的内容')
-
-    def copy_all(self):
-        """复制所有结果信息（包含类型和格式）"""
-        all_text = self.result_text.toPlainText()
-
-        from PySide6.QtWidgets import QApplication
-        clipboard = QApplication.clipboard()
-        clipboard.setText(all_text)
-
-        QtWidgets.QMessageBox.information(self, '复制成功', '已复制完整识别结果到剪贴板')
-
-
-class BatchGenerateDialog(QtWidgets.QDialog):
-    """批量生成二维码对话框"""
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle('批量生成二维码')
-        self.setModal(True)
-        self.setMinimumSize(600, 500)
-
-        self.setup_ui()
-
-    def setup_ui(self):
-        """设置对话框界面"""
-        layout = QVBoxLayout(self)
-
-        # 输入区域
-        input_group = QGroupBox('输入设置')
-        input_layout = QFormLayout()
-
-        self.data_edit = QTextEdit()
-        self.data_edit.setPlaceholderText(
-            '请输入要生成二维码的内容，每行一个：\n例如：\nhttps://www.example.com\n联系电话：13800138000\n产品名称：XXX'
-        )
-        self.data_edit.setMinimumHeight(150)
-
-        input_layout.addRow('数据列表:', self.data_edit)
-        input_group.setLayout(input_layout)
-
-        # 输出设置
-        output_group = QGroupBox('输出设置')
-        output_layout = QFormLayout()
-
-        self.output_dir_edit = QLineEdit()
-        self.output_dir_edit.setPlaceholderText('选择输出目录...')
-        self.output_dir_button = QPushButton('选择目录')
-
-        dir_layout = QHBoxLayout()
-        dir_layout.addWidget(self.output_dir_edit)
-        dir_layout.addWidget(self.output_dir_button)
-
-        self.prefix_edit = QLineEdit()
-        self.prefix_edit.setPlaceholderText('文件名前缀（可选）')
-
-        self.format_combo = QComboBox()
-        self.format_combo.addItems(['PNG', 'JPEG', 'BMP'])
-
-        output_layout.addRow('输出目录:', dir_layout)
-        output_layout.addRow('文件名前缀:', self.prefix_edit)
-        output_layout.addRow('图片格式:', self.format_combo)
-        output_group.setLayout(output_layout)
-
-        # 二维码参数
-        params_group = QGroupBox('二维码参数')
-        params_layout = QFormLayout()
-
-        self.version_spin = QSpinBox()
-        self.version_spin.setRange(1, 40)
-        self.version_spin.setValue(1)
-
-        self.size_spin = QSpinBox()
-        self.size_spin.setRange(100, 1000)
-        self.size_spin.setValue(200)
-        self.size_spin.setSuffix(' px')
-
-        self.margin_spin = QSpinBox()
-        self.margin_spin.setRange(0, 20)
-        self.margin_spin.setValue(4)
-
-        params_layout.addRow('版本:', self.version_spin)
-        params_layout.addRow('尺寸:', self.size_spin)
-        params_layout.addRow('边距:', self.margin_spin)
-        params_group.setLayout(params_layout)
-
-        # 按钮
-        button_layout = QHBoxLayout()
-        self.generate_button = QPushButton('开始生成')
-        self.cancel_button = QPushButton('取消')
-
-        button_layout.addStretch()
-        button_layout.addWidget(self.generate_button)
-        button_layout.addWidget(self.cancel_button)
-
-        # 布局组装
-        layout.addWidget(input_group)
-        layout.addWidget(output_group)
-        layout.addWidget(params_group)
-        layout.addLayout(button_layout)
-
-    def get_batch_data(self):
-        """获取批量生成数据"""
-        data_text = self.data_edit.toPlainText().strip()
-        lines = [line.strip() for line in data_text.split('\n') if line.strip()]
-
-        return {
-            'lines': lines,
-            'output_dir': self.output_dir_edit.text().strip(),
-            'prefix': self.prefix_edit.text().strip(),
-            'format': self.format_combo.currentText().lower(),
-            'version': self.version_spin.value(),
-            'size': self.size_spin.value(),
-            'margin': self.margin_spin.value()
-        }
-
-    def select_output_directory(self):
-        """选择输出目录对话框"""
-        dir_path = QFileDialog.getExistingDirectory(self, '选择输出目录')
-        return dir_path
-
-    def setup_batch_logic(self, controller):
-        """设置批量生成逻辑连接"""
-        self.output_dir_button.clicked.connect(lambda: self.output_dir_edit.setText(self.select_output_directory()))
-        self.generate_button.clicked.connect(lambda: controller.on_batch_generate_with_data(self.get_batch_data()))

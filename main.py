@@ -19,8 +19,7 @@ pip install MyQR
 import sys
 from PySide6.QtWidgets import QApplication
 from PySide6 import QtGui
-from app.ui.main_window import QrCodeGUI, BatchGenerateDialog
-from app.core.qr_generator import QRCodeController
+from app.ui.main_window import QrCodeGUI
 
 
 def main():
@@ -43,15 +42,6 @@ def main():
 
     # 创建主窗口
     gui = QrCodeGUI()
-
-    # 为批量生成对话框关联BatchGenerateDialog类
-    QrCodeGUI.BatchGenerateDialog = BatchGenerateDialog
-
-    # 创建控制器并连接界面和业务逻辑
-    controller = QRCodeController(gui)
-
-    # 初始化
-    controller.initialize()
 
     # 显示窗口并启动应用程序
     gui.show()
