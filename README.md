@@ -1,143 +1,143 @@
-#<div align="center">
+<div align="center">
 
-# 🔲 QR Code & Barcode Generator
+# 🔲 二维码与条形码生成器
 
 [![Python](https://img.shields.io/badge/Python-3.7+-blue.svg)](https://www.python.org/downloads/)
 [![PySide6](https://img.shields.io/badge/PySide6-6.0+-green.svg)](https://pypi.org/project/PySide6/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**A modern desktop application for generating and recognizing QR codes and barcodes**
+**一个用于生成和识别二维码与条形码的现代化桌面应用程序**
 
-[Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [Screenshots](#-screenshots) • [Build](#-build)
+[功能特性](#-功能特性) • [安装说明](#-安装说明) • [使用指南](#-使用指南) • [截图展示](#-截图展示) • [构建打包](#-构建打包)
 
 </div>
 
 ---
 
-## ✨ Features
+## ✨ 功能特性
 
-### 🎯 QR Code Generation
-- **Standard QR Codes** - Customizable version, size, and margin settings
-- **Personalized QR Codes** - Add background images with colorization effects
-- **Batch Processing** - Generate multiple QR codes efficiently
+### 🎯 二维码生成
+- **标准二维码** - 可自定义版本、尺寸和边距设置
+- **个性化二维码** - 添加背景图片并支持彩色效果
+- **批量处理** - 高效生成多个二维码
 
-### 📊 Barcode Support
-- **Code128 Format** - Industry-standard barcode generation
-- **High Quality Output** - Export in PNG format with customizable resolution
+### 📊 条形码支持
+- **Code128 格式** - 行业标准条形码生成
+- **高质量输出** - 导出 PNG 格式，支持自定义分辨率
 
-### 🔍 Recognition Engine
-- **Multi-format Support** - Recognize QR codes and various barcode formats
-- **Image Processing** - Support for PNG, JPG, JPEG, BMP, and GIF files
-- **Fast Detection** - Powered by pyzbar for accurate recognition
+### 🔍 识别引擎
+- **多格式支持** - 识别二维码和各种条形码格式
+- **图像处理** - 支持 PNG、JPG、JPEG、BMP 和 GIF 文件
+- **快速检测** - 基于 pyzbar 的准确识别
 
-### 🎨 Modern UI
-- **Clean Interface** - Intuitive design with Fusion style
-- **Real-time Preview** - Instant visual feedback
-- **Status Notifications** - Clear operation status updates
-- **Responsive Layout** - Adaptive window sizing
+### 🎨 现代化界面
+- **简洁界面** - 采用 Fusion 风格的直观设计
+- **实时预览** - 即时视觉反馈
+- **状态通知** - 清晰的操作状态更新
+- **响应式布局** - 自适应窗口大小
 
 ---
 
-## 📦 Installation
+## 📦 安装说明
 
-### Prerequisites
-- Python 3.7 or higher
-- pip package manager
+### 系统要求
+- Python 3.7 或更高版本
+- pip 包管理器
 
-### Quick Start
+### 快速开始
 
-1. **Clone the repository**
+1. **克隆仓库**
    ```bash
    git clone https://github.com/yourusername/QRcodeGenerate.git
    cd QRcodeGenerate
    ```
 
-2. **Install dependencies**
+2. **安装依赖**
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Run the application**
+3. **运行应用**
    ```bash
    python main.py
    ```
 
-### Dependencies
+### 依赖包
 
-| Package | Version | Purpose |
+| 包名 | 版本 | 用途 |
 |---------|---------|----------|
-| PySide6 | Latest | GUI framework |
-| qrcode | Latest | Standard QR code generation |
-| MyQR | Latest | Personalized QR codes with images |
-| python-barcode | Latest | Barcode generation |
-| pyzbar | Latest | QR/Barcode recognition |
-| Pillow | Latest | Image processing |
-| pyinstaller | Latest | Application packaging |
+| PySide6 | 最新 | GUI 框架 |
+| qrcode | 最新 | 标准二维码生成 |
+| MyQR | 最新 | 带图片的个性化二维码 |
+| python-barcode | 最新 | 条形码生成 |
+| pyzbar | 最新 | 二维码/条形码识别 |
+| Pillow | 最新 | 图像处理 |
+| pyinstaller | 最新 | 应用程序打包 |
 
-> **Note**: For `pyzbar` to work properly, you need to install the ZBar library:
-> - **Windows**: Download from [ZBar Downloads](http://zbar.sourceforge.net/download.html)
-> - **Linux**: `sudo apt-get install libzbar0`
-> - **macOS**: `brew install zbar`
-
----
-
-## 🚀 Usage
-
-### Standard QR Code
-1. Select **"普通二维码"** (Standard QR Code)
-2. Enter your content in the text field
-3. Adjust parameters:
-   - **Version**: QR code version (1-40)
-   - **Size**: Output dimensions
-   - **Margin**: Border width in pixels
-4. Click **"📱 生成二维码"** (Generate QR Code)
-
-### Personalized QR Code
-1. Select **"个性化二维码"** (Personalized QR Code)
-2. Enter your content
-3. Click **"选择图片"** (Select Image) to add a background
-4. Toggle **"启用彩色效果"** (Enable Color) for colorization
-5. Click **"📱 生成二维码"** (Generate QR Code)
-
-### Barcode Generation
-1. Enter alphanumeric content
-2. Click **"📊 生成条形码"** (Generate Barcode)
-3. Preview appears in the display area
-
-### Save Generated Images
-- Click **"💾 保存图片"** (Save Image)
-- Choose your destination and filename
-- Image saved as PNG format
-
-### Recognition
-1. Click **"🔍 识别图片"** (Recognize Image)
-2. Select an image file containing QR code or barcode
-3. Recognition results displayed in a dialog
+> **注意**：为了让 `pyzbar` 正常工作，您需要安装 ZBar 库：
+> - **Windows**：从 [ZBar 下载页面](http://zbar.sourceforge.net/download.html) 下载
+> - **Linux**：`sudo apt-get install libzbar0`
+> - **macOS**：`brew install zbar`
 
 ---
 
-## 📸 Screenshots
+## 🚀 使用指南
+
+### 标准二维码
+1. 选择 **"普通二维码"**
+2. 在文本框中输入您的内容
+3. 调整参数：
+   - **版本**：二维码版本（1-40）
+   - **尺寸**：输出尺寸
+   - **边距**：边框宽度（像素）
+4. 点击 **"📱 生成二维码"**
+
+### 个性化二维码
+1. 选择 **"个性化二维码"**
+2. 输入您的内容
+3. 点击 **"选择图片"** 添加背景
+4. 开启 **"启用彩色效果"** 进行着色
+5. 点击 **"📱 生成二维码"**
+
+### 条形码生成
+1. 输入字母数字内容
+2. 点击 **"📊 生成条形码"**
+3. 预览会显示在显示区域
+
+### 保存生成的图片
+- 点击 **"💾 保存图片"**
+- 选择目标位置和文件名
+- 图片保存为 PNG 格式
+
+### 识别功能
+1. 点击 **"🔍 识别图片"**
+2. 选择包含二维码或条形码的图片文件
+3. 识别结果会显示在对话框中
+
+---
+
+## 📸 截图展示
 
 <div align="center">
 
-### Main Interface
-*Modern, clean UI with intuitive controls*
+### 主界面
+*现代化、简洁的用户界面，操作直观*
 
-### QR Code Generation
-*Support for both standard and personalized QR codes*
+### 二维码生成
+*支持标准和个性化二维码*
 
-### Barcode Generation
-*Code128 barcode format support*
+### 条形码生成
+*支持 Code128 条形码格式*
 
 </div>
 
 ---
 
-## 🏗️ Build
+## 🏗️ 构建打包
 
-### Package as Executable
+### 打包为可执行文件
 
-The project includes automated build scripts for creating standalone executables:
+项目包含用于创建独立可执行文件的自动构建脚本：
 
 #### Windows
 ```bash
@@ -150,81 +150,82 @@ chmod +x build.sh
 ./build.sh
 ```
 
-#### Manual Build
+#### 手动构建
 ```bash
 pip install pyinstaller
 pyinstaller --clean build.spec
 ```
 
-The executable will be generated in the `dist/` directory:
-- **Windows**: `dist/QRCodeGenerator.exe`
-- **Linux/macOS**: `dist/QRCodeGenerator`
+可执行文件将生成在 `dist/` 目录中：
+- **Windows**：`dist/QRCodeGenerator.exe`
+- **Linux/macOS**：`dist/QRCodeGenerator`
 
-For detailed packaging instructions, see [PACKAGING_GUIDE.md](PACKAGING_GUIDE.md)
+详细的打包说明请参见 [PACKAGING_GUIDE.md](PACKAGING_GUIDE.md)
 
 ---
 
-## 📁 Project Structure
+## 📁 项目结构
 
 ```
 QRcodeGenerate/
-├── main.py              # Main application entry point
-├── requirements.txt     # Python dependencies
-├── build.spec          # PyInstaller configuration
-├── build.bat           # Windows build script
-├── build.sh            # Linux/macOS build script
-├── README.md           # Project documentation
-└── PACKAGING_GUIDE.md  # Detailed packaging instructions
+├── main.py              # 主应用程序入口
+├── requirements.txt     # Python 依赖
+├── build.spec          # PyInstaller 配置
+├── build.bat           # Windows 构建脚本
+├── build.sh            # Linux/macOS 构建脚本
+├── README.md           # 项目文档（中文）
+├── README.en.md        # 项目文档（英文）
+└── PACKAGING_GUIDE.md  # 详细打包说明
 ```
 
 ---
 
-## 🛠️ Development
+## 🛠️ 开发
 
-### Code Style
-- Follow PEP 8 guidelines
-- Use meaningful variable names
-- Add docstrings to functions and classes
+### 代码规范
+- 遵循 PEP 8 指南
+- 使用有意义的变量名
+- 为函数和类添加文档字符串
 
-### Testing
-- Test all features before committing
-- Verify cross-platform compatibility
-- Check UI responsiveness
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+### 测试
+- 提交前测试所有功能
+- 验证跨平台兼容性
+- 检查 UI 响应性
 
 ---
 
-## 📝 License
+## 🤝 贡献
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+欢迎贡献！请随时提交 Pull Request。
+
+1. Fork 本仓库
+2. 创建您的功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交您的更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 打开 Pull Request
 
 ---
 
-## 🙏 Acknowledgments
+## 📝 许可证
+
+本项目基于 MIT 许可证 - 详情请参见 [LICENSE](LICENSE) 文件。
+
+---
+
+## 🙏 致谢
 
 - [PySide6](https://www.qt.io/qt-for-python) - Qt for Python
-- [qrcode](https://github.com/lincolnloop/python-qrcode) - Pure Python QR Code generator
-- [MyQR](https://github.com/sylnsfar/qrcode) - Artistic QR Code generator
-- [python-barcode](https://github.com/WhyNotHugo/python-barcode) - Barcode generator
-- [pyzbar](https://github.com/NaturalHistoryMuseum/pyzbar) - ZBar wrapper for Python
+- [qrcode](https://github.com/lincolnloop/python-qrcode) - 纯 Python 二维码生成器
+- [MyQR](https://github.com/sylnsfar/qrcode) - 艺术二维码生成器
+- [python-barcode](https://github.com/WhyNotHugo/python-barcode) - 条形码生成器
+- [pyzbar](https://github.com/NaturalHistoryMuseum/pyzbar) - Python 的 ZBar 包装器
 
 ---
 
 <div align="center">
 
-**Made with ❤️ using Python and PySide6**
+**使用 Python 和 PySide6 制作 ❤️**
 
-[⬆ Back to top](#-qr-code--barcode-generator)
+[⬆ 返回顶部](#-二维码与条形码生成器)
 
 </div>
